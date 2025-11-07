@@ -21,26 +21,10 @@ struct ContentView: View {
         case longBreak = "Long Break"
 
         var id: String { rawValue }
-
-        var duration: Int {
-            switch self {
-            case .work: return 25 * 60
-            case .shortBreak: return 5 * 60
-            case .longBreak: return 15 * 60
-            }
-        }
-
-        var accentColor: Color {
-            switch self {
-            case .work: return .red
-            case .shortBreak: return .gray.opacity(0.25)
-            case .longBreak: return .gray.opacity(0.25)
-            }
-        }
     }
 
     @State private var mode: Mode = .work
-    @State private var remaining: Int = Mode.work.duration
+    @State private var remaining: Int = 25 * 60
     @State private var isRunning = false
     @State private var sessionsCompleted = 0
 
@@ -50,6 +34,14 @@ struct ContentView: View {
     @State private var currentWorkMinutes: Int = 25
     @State private var currentShortMinutes: Int = 5
     @State private var currentLongMinutes: Int = 15
+
+    private func duration(for mode: Mode) -> Int {
+        switch mode {
+        case .work: return currentWorkMinutes * 60
+        case .shortBreak: return currentShortMinutes * 60
+        case .longBreak: return currentLongMinutes * 60
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -157,6 +149,9 @@ struct ContentView: View {
                         currentWorkMinutes = w
                         currentShortMinutes = s
                         currentLongMinutes = l
+                        stopTimer()
+                        isRunning = false
+                        remaining = duration(for: mode)
                     }
                 }
             }
@@ -166,13 +161,14 @@ struct ContentView: View {
         .onDisappear { stopTimer() }
         .onChange(of: mode) { oldValue, newValue in
             // keep progress consistent when switching modes
-            remaining = newValue.duration
+            remaining = duration(for: newValue)
         }
     }
 
     private var progress: Double {
-        guard mode.duration > 0 else { return 0 }
-        return 1.0 - Double(remaining) / Double(mode.duration)
+        let total = duration(for: mode)
+        guard total > 0 else { return 0 }
+        return 1.0 - Double(remaining) / Double(total)
     }
 
     // MARK: - Actions
@@ -180,7 +176,7 @@ struct ContentView: View {
     private func switchMode(to newMode: Mode) {
         stopTimer()
         mode = newMode
-        remaining = newMode.duration
+        remaining = duration(for: newMode)
     }
 
     private func toggleTimer() {
@@ -191,7 +187,7 @@ struct ContentView: View {
     private func resetTimer() {
         stopTimer()
         isRunning = false
-        remaining = mode.duration
+        remaining = duration(for: mode)
     }
 
     private func startTimer() {
