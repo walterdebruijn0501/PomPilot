@@ -10,8 +10,10 @@ import SwiftUI
 @main
 struct Pom_PilotApp: App {
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        WindowGroup("Pomodoro Timer") {
+            PomPilotView()
         }
+        .defaultSize(width: 640, height: 460)
+        .windowResizability(.contentSize)
     }
 }
